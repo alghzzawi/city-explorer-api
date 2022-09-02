@@ -2,6 +2,7 @@ import React from 'react'
 import axios from 'axios';
 import Weather from './weather';
 import weatherData from './weather.json';
+import './App.css'
 class APP extends React.Component{
 
   constructor(props){
@@ -69,16 +70,16 @@ class APP extends React.Component{
 
   render(){
     return(
-      <div>
-
+      <div id='weather'>
+        <h1>weather state</h1>
         <form onSubmit={this.getweatherData}>
           <input type="text" name="cityName" placeholder='Enter city name'/>
-          <button type='submit'>Get Data</button>
+          <button type='submit'>Get weather</button>
           <p>latLoc= {this.state.latLoc}</p>
           <p>lonLoc= {this.state.lonLoc}</p>
         </form>
         <h1>Weather state in {this.state.searchQuery}, {this.state.timezone} ({this.state.countryCode}) </h1>
-        <img src={`https://maps.locationiq.com/v3/staticmap?key=pk.1ed11f75d75e6a8c33f7c8e4afae6908&center=${this.state.latLoc},${this.state.lonLoc}`} />
+        <img alt={this.state.searchQuery} src={`https://maps.locationiq.com/v3/staticmap?key=pk.1ed11f75d75e6a8c33f7c8e4afae6908&center=${this.state.latLoc},${this.state.lonLoc}`}  />
         <div>
         <Weather weather={this.state.weather}  />
         </div>
