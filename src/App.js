@@ -1,90 +1,162 @@
-import React from 'react'
-import axios from 'axios';
-import Weather from './weather';
-import weatherData from './weather.json';
-import './App.css'
-class APP extends React.Component{
+import React from "react";
+import axios from "axios";
+import Weather from "./weather";
+import Movies from "./movies";
+import "./App.css";
 
-  constructor(props){
+class APP extends React.Component {
+  constructor(props) {
     super(props);
     this.state = {
-      timezone:'',
-      searchQuery:'',
-      weather:[],
-      latLoc:0,
-      lonLoc:0
-    }
+      weatherdata: [],
+      timezone: "",
+      latQuery: 0,
+      lonQuery: 0,
+      cityName: "",
+      countryCode: "",
+      moviesData: [],
+    };
   }
 
-  getweatherData = async (e) =>{
+  getweatherData = async (e) => {
     e.preventDefault();
-    const searchQuery = e.target.cityName.value;
+    const latQuery = e.target.lat.value;
+    const lonQuery = e.target.lon.value;
 
-    // const url = `http://localhost:3000/weather?searchQuery=${searchQuery}`
-    // try{
-    //   const server = await axios.get(url);
-    //   // console.log(server.data.city_name)
-    //   // console.log(server.data.lat)
-    //   this.setState ({
-    //     searchQuery : server.data.city_name,
-    //     latLoc : server.data.lat,
-    //     lonLoc : server.data.lon,
-    //     timezone: server.data.timezone,
-    //     countryCode : server.data.country_code
-    //   })
-      
-    // }catch{
-      
-    // }
-    
-    // console.log(searchQuery, this.state.latLoc, this.state.lonLoc);
-    this.weatherCity(this.state.latLoc, this.state.lonLoc,searchQuery);
+    this.weatherCity(latQuery, lonQuery);
   };
-  weatherCity = async (lat, lon,searchQuery) => {
-    const url = `http://localhost:3000/weather?searchQuery=${searchQuery}`
-    // console.log(this.state.searchQuery, lat,lon);
-    try{
-      const weather = await axios.get(url,'Data',{params:{lat:lat, lon:lon}})
-      console.log(weather.data)
+  weatherCity = async (latQuery, lonQuery) => {
+    const url = `http://localhost:3050/weather_alghzawi_explorer`;
+
+    try {
+      const weather = await axios.get(url, {
+        params: { lat: latQuery, lon: lonQuery },
+      });
       this.setState({
-        weather: weather.data
-      }); 
-    }catch{
+        weatherdata: weather.data,
+        latQuery: latQuery,
+        lonQuery: lonQuery,
+      });
+    } catch {
       //error
-      console.log('erorr');
+      console.log("erorr");
     }
-    weatherData.find(item=>{
-      if(searchQuery.toLowerCase() === item.city_name.toLowerCase()){
-        this.setState({
-          latLoc:item.lat,
-          lonLoc:item.lon,
-          searchQuery:searchQuery,
-          timezone:item.timezone,
-          countryCode:item.country_code
-        })
-      }
-    })
 
+    // this lines for cityName, timezone and countryCode
+    const urlCityData = `http://api.weatherbit.io/v2.0/forecast/daily?key=3fbdf4a4a1af47749141c6573177005a`;
+
+    const cityData = await axios.get(urlCityData, {
+      params: { lat: latQuery, lon: lonQuery },
+    });
+    this.setState({
+      cityName: cityData.data.city_name,
+      timezone: cityData.data.timezone,
+      countryCode: cityData.data.country_code,
+    });
+    this.getMovieData(cityData.data.city_name);
+  }; /////////////////////
+
+  getweatherDataByCityName = async (e) => {
+    e.preventDefault();
+    const cityQuery = e.target.city.value;
+
+    this.weatherByCityName(cityQuery);
   };
-  
+  weatherByCityName = async (cityQuery) => {
+    const URL = `http://localhost:3050/weathercity_alghzawi_explorer`;
 
-  render(){
-    return(
-      <div id='weather'>
-        <h1>weather state</h1>
-        <form onSubmit={this.getweatherData}>
-          <input type="text" name="cityName" placeholder='Enter city name'/>
-          <button type='submit'>Get weather</button>
-          <p>latLoc= {this.state.latLoc}</p>
-          <p>lonLoc= {this.state.lonLoc}</p>
-        </form>
-        <h1>Weather state in {this.state.searchQuery}, {this.state.timezone} ({this.state.countryCode}) </h1>
-        <img alt={this.state.searchQuery} src={`https://maps.locationiq.com/v3/staticmap?key=pk.1ed11f75d75e6a8c33f7c8e4afae6908&center=${this.state.latLoc},${this.state.lonLoc}`}  />
-        <div>
-        <Weather weather={this.state.weather}  />
-        </div>
+    try {
+      const weather = await axios.get(URL, {
+        params: { cityQuery: cityQuery },
+      });
+
+      this.setState({
+        weatherdata: weather.data,
+        cityQuery: cityQuery,
+      });
+    } catch {
+      console.log("erorr by city");
+    }
+    // this lines for cityName, timezone and countryCode
+    const urlCityData = `http://api.weatherbit.io/v2.0/forecast/daily?key=3fbdf4a4a1af47749141c6573177005a`;
+    const cityData = await axios.get(urlCityData, {
+      params: { city: cityQuery },
+    });
+
+    this.setState({
+      timezone: cityData.data.timezone,
+      countryCode: cityData.data.country_code,
+      latQuery: cityData.data.lat,
+      lonQuery: cityData.data.lon,
+      cityName: cityData.data.city_name,
+    });
+    this.getMovieData(cityQuery);
+  };
+
+  getMovieData = async (cityQuery) => {
+    const url = `http://localhost:3050/movies_alghzawi_explorer`;
+    try {
+      const movieData = await axios.get(url, { params: { query: cityQuery } });
+      this.setState({
+        moviesData: movieData.data,
+      });
+    } catch {
+      console.log("erorr by movies");
+    }
+  };
+
+  render() {
+    return (
+      <div>
+        <section id="weather">
+          <h1>weather state</h1>
+          <form id="form" onSubmit={this.getweatherData}>
+            <label for="fname">Enter city latitude and longitude</label>
+            <br />
+            <input type="text" name="lat" placeholder="Enter city latitude" />
+            <input type="text" name="lon" placeholder="Enter city longitude" />
+            <br />
+            <button type="submit">Get weather</button>
+          </form>
+          <form onSubmit={this.getweatherDataByCityName} id="form">
+            <label for="fname">OR</label>
+            <br />
+            <label for="fname">enter city name</label>
+            <br />
+            <input type="text" name="city" placeholder="Enter city namr" />
+            <br />
+            <button type="submit">Get weather</button>
+          </form>
+
+          <h1>
+            Weather state in {this.state.cityName}, {this.state.timezone} (
+            {this.state.countryCode}){" "}
+          </h1>
+          <p>
+            <span>latitude= {this.state.latQuery} </span>
+            <span>, longitude= {this.state.lonQuery} </span>
+          </p>
+          <img
+            alt={this.state.cityName}
+            src={`https://maps.locationiq.com/v3/staticmap?key=pk.1ed11f75d75e6a8c33f7c8e4afae6908&center=${this.state.latQuery},${this.state.lonQuery}`}
+          />
+          <div id="dateData">
+            <h4>wether state in {this.state.cityName} for 16 day</h4>
+            <div id="data">
+              <Weather weather={this.state.weatherdata} />
+            </div>
+          </div>
+        </section>
+        <section>
+          <div id="MovesData">
+            <h4>Movies that published in {this.state.cityName} </h4>
+            <div id="MoveData">
+              <Movies movies={this.state.moviesData} />
+            </div>
+          </div>
+        </section>
       </div>
-    )
+    );
   }
 }
 export default APP;
